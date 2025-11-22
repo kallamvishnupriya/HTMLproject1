@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Intelligent Web Interaction Engine</title>
+  <meta name="description" content="A single-file prototype showcasing responsive UI, intelligent suggestions, and modular interactions." />
+  <style>
+    :root{
+      --bg:#0f1724; /* dark slate */
+      --card:#0b1220;
+      --muted:#94a3b8;
+      --accent:#7c3aed; /* violet */
+      --glass: rgba(255,255,255,0.04);
+      --radius:14px;
+      --maxw:1100px;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#061226 0%, #07132a 60%);color:#e6eef8}
+    .app{max-width:var(--maxw);margin:32px auto;padding:24px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+
+    header{grid-column:1/ -1;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:54px;height:54px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#4f46e5);font-weight:700}
+    h1{font-size:18px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    /* main card */
+    .main-card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:var(--radius);box-shadow:0 8px 30px rgba(2,6,23,0.6);min-height:520px;display:flex;flex-direction:column}
+
+    .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+    .search{flex:1;display:flex;gap:8px;align-items:center;background:var(--glass);padding:8px;border-radius:10px}
+    .search input{flex:1;border:0;background:transparent;color:inherit;padding:6px 8px;outline:none}
+    .btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#4f46e5);border:none;color:white}
+
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+    .module{background:rgba(255,255,255,0.02);padding:12px;border-radius:12px}
+    .module h3{margin:0 0 8px 0;font-size:14px}
+    .content{height:260px;overflow:auto;padding-right:6px}
+
+    /* suggestions */
+    .suggestions{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,0.03);cursor:pointer;border:1px solid rgba(255,255,255,0.03);font-size:13px}
+
+    /* control panel (right column) */
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:14px;border-radius:var(--radius);height:100%}
+    .stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* interactive list */
+    .item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));margin-bottom:8px}
+    .item small{color:var(--muted)}
+
+    footer{grid-column:1/-1;margin-top:14px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* responsive */
+    @media (max-width:980px){.app{grid-template-columns:1fr;padding:12px}.grid{grid-template-columns:1fr}.app > header{flex-direction:column;align-items:flex-start}.main-card{min-height:380px}}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">I</div>
+        <div>
+          <h1>Intelligent Web Interaction Engine</h1>
+          <p class="lead">Prototype — responsive modules, adaptive suggestions & smart controls</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" id="themeToggle">Toggle Theme</button>
+        <button class="btn primary" id="exportBtn">Export HTML</button>
+      </div>
+    </header>
+
+    <main class="main-card">
+      <div class="toolbar">
+        <div class="search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></circle></svg>
+          <input id="globalSearch" placeholder="Search UI modules, suggestions or actions..." />
+          <button class="btn" id="suggestBtn">Suggest</button>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="muted">Mode:</div>
+          <select id="modeSelect" class="btn">
+            <option value="assist">Assist</option>
+            <option value="automate">Automate</option>
+            <option value="analytics">Analytics</option>
+          </select>
+        </div>
+      </div>
+
+      <section class="grid">
+        <div>
+          <div class="module">
+            <h3>Live Interaction Console</h3>
+            <div class="content" id="console">
+              <div class="item"><div><strong>Welcome</strong><br><small>Try typing and press Enter to create actions</small></div><div><small class="muted">now</small></div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <input id="actionInput" placeholder="Type an action, e.g. 'Create greeting'" style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" />
+              <button class="btn primary" id="runAction">Run</button>
+            </div>
+          </div>
+
+          <div class="module" style="margin-top:12px">
+            <h3>Adaptive Suggestions</h3>
+            <div class="suggestions" id="suggestions">
+              <!-- chips inserted here -->
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel">
+          <h3 style="margin-top:0">Control Panel</h3>
+          <div class="stat"><div class="muted">Active Users</div><div id="activeUsers">—</div></div>
+          <div class="stat"><div class="muted">Actions Run</div><div id="actionsRun">0</div></div>
+          <div class="stat"><div class="muted">Last Action</div><div id="lastAction">—</div></div>
+
+          <div style="margin-top:12px"><h3 style="font-size:13px;margin:8px 0">Quick Tools</h3>
+            <button class="btn" id="clearConsole">Clear</button>
+            <button class="btn" id="fillDemo">Demo</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <h3 style="font-size:13px;margin:8px 0">Recent Items</h3>
+            <div id="recentList">
+              <!-- recent items -->
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <div style="margin-top:14px" class="module">
+        <h3 style="margin-bottom:10px">Interaction Analytics (simulated)</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="item" style="flex:1;min-width:180px"><div><strong id="ctr">0</strong><br><small class="muted">Click Through Rate</small></div></div>
+          <div class="item" style="flex:1;min-width:180px"><div><strong id="eng">0</strong><br><small class="muted">Engagement Score</small></div></div>
+          <div class="item" style="flex:1;min-width:180px"><div><strong id="resp">0ms</strong><br><small class="muted">Avg Response</small></div></div>
+        </div>
+      </div>
+
+    </main>
+
+    <aside class="panel">
+      <h3>Project Info</h3>
+      <p class="muted">Title: Intelligent Web Interaction Engine</p>
+      <p class="muted">Single-file demo with modular UI components, adaptive suggestions and local persistence.</p>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:10px 0" />
+      <h3 style="font-size:13px;margin:8px 0">Shortcuts</h3>
+      <div class="muted">Enter = Run action<br>Ctrl+K = Focus search<br>Ctrl+E = Export HTML</div>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:10px 0" />
+      <h3 style="font-size:13px;margin:8px 0">Data</h3>
+      <div id="dataDump" style="font-size:12px;color:var(--muted);max-height:220px;overflow:auto"></div>
+    </aside>
+
+    <footer>Prototype • Not production-ready — Customize & split into components for production</footer>
+  </div>
+
+  <script>
+    /* ----------------------------- Utilities ----------------------------- */
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    /* ----------------------------- State ----------------------------- */
+    const state = {
+      actionsRun: 0,
+      suggestions: ['Create greeting','Toggle theme','Show modal','Generate list','Summarize page','Animate header','Export data','Create chart'],
+      recent: [],
+      analytics: {ctr: 12,eng: 78,resp: 240}
+    };
+
+    /* ----------------------------- Init ----------------------------- */
+    function init(){
+      renderSuggestions();
+      renderAnalytics();
+      renderRecent();
+      $('#activeUsers').innerText = Math.floor(50 + Math.random()*500);
+
+      // keyboard shortcuts
+      window.addEventListener('keydown', e=>{
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='k'){
+          e.preventDefault(); $('#globalSearch').focus();
+        }
+        if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==='e'){
+          e.preventDefault(); exportHTML();
+        }
+      });
+
+      // attach handlers
+      $('#runAction').addEventListener('click', runActionFromInput);
+      $('#actionInput').addEventListener('keydown', e=>{ if(e.key==='Enter') runActionFromInput(); });
+      $('#suggestBtn').addEventListener('click', generateSmartSuggestion);
+      $('#clearConsole').addEventListener('click', clearConsole);
+      $('#fillDemo').addEventListener('click', fillDemo);
+      $('#themeToggle').addEventListener('click', toggleTheme);
+      $('#exportBtn').addEventListener('click', exportHTML);
+
+      $('#globalSearch').addEventListener('input', onSearch);
+    }
+
+    /* ----------------------------- Console & Actions ----------------------------- */
+    function appendConsole(message, tag='info'){
+      const id = 'it'+Date.now();
+      const el = document.createElement('div');
+      el.className='item';
+      el.innerHTML = `<div><strong>${escapeHtml(message)}</strong><br><small class=\"muted\">${new Date().toLocaleTimeString()}</small></div><div><small class=\"muted\">${tag}</small></div>`;
+      $('#console').prepend(el);
+      state.recent.unshift({text:message, time:Date.now()});
+      if(state.recent.length>8) state.recent.pop();
+      state.actionsRun++;
+      $('#actionsRun').innerText = state.actionsRun;
+      $('#lastAction').innerText = message;
+      renderRecent();
+      // small simulated analytics bump
+      state.analytics.ctr = Math.min(100, state.analytics.ctr + Math.floor(Math.random()*3));
+      state.analytics.eng = Math.min(100, state.analytics.eng + Math.floor(Math.random()*2));
+      state.analytics.resp = Math.max(60, state.analytics.resp - Math.floor(Math.random()*7));
+      renderAnalytics();
+    }
+
+    function runActionFromInput(){
+      const input = $('#actionInput');
+      const val = input.value.trim();
+      if(!val) return appendConsole('No action provided','warning');
+      // simulate "intelligence" by parsing verbs
+      if(/create|make|new|add/i.test(val)){
+        appendConsole(`Created: ${val}`,'create');
+      } else if(/toggle|switch|theme|dark|light/i.test(val)){
+        toggleTheme();
+        appendConsole(`Toggled theme: ${val}`,'ui');
+      } else if(/export|download/i.test(val)){
+        exportHTML();
+        appendConsole('Exported project HTML','export');
+      } else if(/summarize|summary/i.test(val)){
+        appendConsole('Summarized content (simulated)','ai');
+      } else {
+        appendConsole(`Executed: ${val}`,'action');
+      }
+      input.value='';
+    }
+
+    function clearConsole(){
+      $('#console').innerHTML='';
+      appendConsole('Console cleared','system');
+      state.actionsRun = 0; $('#actionsRun').innerText=0;
+    }
+
+    function fillDemo(){
+      const demos = ['Create greeting','Generate list of 5 features','Toggle theme','Export HTML','Show analytics'];
+      demos.forEach((d,i)=>setTimeout(()=>{ $('#actionInput').value=d; runActionFromInput(); }, 250*i));
+    }
+
+    /* ----------------------------- Suggestions ----------------------------- */
+    function renderSuggestions(){
+      const wrap = $('#suggestions'); wrap.innerHTML='';
+      state.suggestions.forEach(s=>{
+        const chip = document.createElement('div'); chip.className='chip'; chip.innerText=s;
+        chip.addEventListener('click', ()=>{ $('#actionInput').value=s; runActionFromInput(); });
+        wrap.appendChild(chip);
+      });
+    }
+
+    function generateSmartSuggestion(){
+      // naive "intelligence": use last action + mode to suggest next
+      const mode = $('#modeSelect').value;
+      const last = state.recent[0]?.text || 'Start here';
+      const suggestion = mode === 'assist'
+        ? `Summarize: ${last}`
+        : mode === 'automate'
+          ? `Automate: repeat ${last}`
+          : `Analyze: metrics for ${last}`;
+      state.suggestions.unshift(suggestion);
+      if(state.suggestions.length>12) state.suggestions.pop();
+      renderSuggestions();
+      appendConsole(`Suggested: ${suggestion}`,'suggestion');
+    }
+
+    /* ----------------------------- Recent ----------------------------- */
+    function renderRecent(){
+      const el = $('#recentList'); el.innerHTML='';
+      state.recent.forEach(r=>{
+        const d = document.createElement('div'); d.className='item';
+        d.innerHTML = `<div><div>${escapeHtml(r.text)}</div><small class=\"muted\">${timeAgo(r.time)}</small></div><div><button class=\"btn\" onclick=\"replayAction(${JSON.stringify(escapeJson(r.text))})\">Replay</button></div>`;
+        el.appendChild(d);
+      });
+      $('#dataDump').innerText = JSON.stringify(state, null, 2);
+    }
+
+    function replayAction(text){
+      $('#actionInput').value = text; runActionFromInput();
+    }
+
+    /* ----------------------------- Analytics ----------------------------- */
+    function renderAnalytics(){
+      $('#ctr').innerText = state.analytics.ctr + '%';
+      $('#eng').innerText = state.analytics.eng + '%';
+      $('#resp').innerText = state.analytics.resp + 'ms';
+    }
+
+    /* ----------------------------- Export ----------------------------- */
+    function exportHTML(){
+      // create a minimal export of the current HTML app
+      const doc = document.documentElement.outerHTML;
+      const blob = new Blob([doc], {type: 'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'intelligent-web-interaction-engine.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+      appendConsole('Prepared downloadable HTML file','export');
+    }
+
+    /* ----------------------------- Small helpers ----------------------------- */
+    function onSearch(e){
+      const q = e.target.value.toLowerCase();
+      if(!q) return renderSuggestions();
+      const filtered = state.suggestions.filter(s=>s.toLowerCase().includes(q));
+      const wrap = $('#suggestions'); wrap.innerHTML='';
+      filtered.forEach(s=>{ const chip=document.createElement('div'); chip.className='chip'; chip.innerText=s; chip.addEventListener('click', ()=>{ $('#actionInput').value=s; runActionFromInput(); }); wrap.appendChild(chip); });
+    }
+
+    function toggleTheme(){
+      const root = document.documentElement;
+      if(root.style.getPropertyValue('--bg') === ''){ /* ignore */ }
+      // simple accent animation by toggling a data attribute
+      if(document.body.hasAttribute('data-light')){
+        document.body.removeAttribute('data-light');
+        appendConsole('Switched to dark theme','ui');
+      } else {
+        document.body.setAttribute('data-light','1');
+        appendConsole('Switched to light theme','ui');
+      }
+      // tactile visual - invert background for demo
+      if(document.body.hasAttribute('data-light')){
+        document.body.style.background = 'linear-gradient(180deg,#f7fafc,#eef2ff)';
+        document.documentElement.style.setProperty('--bg','#ffffff');
+        document.documentElement.style.setProperty('--muted','#475569');
+      } else {
+        document.body.style.background = 'linear-gradient(180deg,#061226,#07132a)';
+        document.documentElement.style.setProperty('--bg','#0f1724');
+        document.documentElement.style.setProperty('--muted','#94a3b8');
+      }
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function escapeJson(s){
+      return String(s)
+        .replace(/\\/g, "\\\\")
+        .replace(/"/g, "\\\"");
+    }
+    function timeAgo(ts){ const d = Math.floor((Date.now()-ts)/1000); if(d<5) return 'just now'; if(d<60) return d+'s'; if(d<3600) return Math.floor(d/60)+'m'; return Math.floor(d/3600)+'h'; }
+
+    /* expose replay globally for inline onclick to work */
+    window.replayAction = function(t){ const txt = String(t); $('#actionInput').value = txt; runActionFromInput(); };
+
+    // initialize
+    init();
+
+  </script>
+</body>
+</html>
